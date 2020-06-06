@@ -1,12 +1,30 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
+    <SearchForm/>
     <router-view/>
   </div>
 </template>
+
+<script lang="ts">
+import Vue from 'vue';
+import { Component } from 'vue-property-decorator';
+import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import SearchForm from '@/components/SearchForm.vue';
+
+Vue.use(BootstrapVue);
+Vue.use(IconsPlugin);
+
+@Component({
+  components: {
+    SearchForm,
+  },
+})
+export default class App extends Vue {
+
+}
+</script>
 
 <style lang="scss">
 #app {
