@@ -1,8 +1,10 @@
 <template>
-  <div id="app">
-    <SearchForm/>
-    <router-view/>
-  </div>
+  <b-container>
+    <div id="app">
+      <SearchForm/>
+      <router-view/>
+    </div>
+  </b-container>
 </template>
 
 <script lang="ts">
