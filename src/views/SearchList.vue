@@ -1,12 +1,13 @@
 <template>
   <div>
     <b-pagination v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
+    <b-form-select v-model="selected" :options="options"></b-form-select>
       <ul class="movie-list">
         <li v-for="movie in currentItems" :currentItems="currentItems" :key="movie.id" class="movie-list-item">
           <img :src='movie.posterPath' class="movie-list-item-img"/>
           <div>
             <h1>{{movie.title}}</h1>
-            <p>{{movie.originalTitle}}</p>
+            <p v-if="movie.title !== movie.originalTitle">{{movie.originalTitle}}</p>
             <p>{{movie.popularity}}</p>
             <p>{{movie.voteCount}} votes</p>
           </div>
@@ -34,12 +35,21 @@ export default class SearchList extends Vue {
 
     private items: MovieListItem[] = [];
 
-    currentItems: MovieListItem[] = [];
+    private currentItems: MovieListItem[] = [];
 
-    perPage = 3;
+    private perPage = 3;
 
-    currentPage = 1;
+    private currentPage = 1;
 
+    private selected = null;
+
+    options = [
+      { value: null, text: 'Sort' },
+      { value: 'az', text: 'A-Z' },
+      { value: 'za', text: 'Z-A' },
+      { value: 'mostPopular', text: 'most popular' },
+      { value: 'leastPopular', text: 'least popular' },
+    ]
 
     get rows(): number {
       return this.items.length;
@@ -47,6 +57,25 @@ export default class SearchList extends Vue {
 
     get searchValue(): string {
       return this.$store.state.searchValue;
+    }
+
+    @Watch('selected')
+    private sortList() {
+      if (this.selected === 'az') {
+        this.items.sort((a, b) => a.title.localeCompare(b.title));
+      }
+      if (this.selected === 'za') {
+        this.items.sort((a, b) => b.title.localeCompare(a.title));
+      }
+
+      if (this.selected === 'mostPopular') {
+        this.items.sort((a, b) => b.popularity - a.popularity);
+      }
+      if (this.selected === 'leastPopular') {
+        this.items.sort((a, b) => a.popularity - b.popularity);
+      }
+
+      this.updateCurrentList();
     }
 
     @Watch('currentPage')
@@ -59,6 +88,7 @@ export default class SearchList extends Vue {
 
     @Watch('searchValue')
     private async getList() {
+      this.items = [];
       await this.getMovies();
       for (this.page = 2; this.page <= this.allPages; this.page += 1) {
         this.getMovies();

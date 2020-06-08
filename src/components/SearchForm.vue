@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-form @submit="formValidation" :validated="validated" class="was-walidated" novalidate>
+        <b-form @submit.prevent="formValidation" :validated="validated" class="was-walidated" novalidate>
             <b-form-input type="text" placeholder="Search movies" v-model="inputFormValue" minlength="3" :state="inputValidation" required></b-form-input>
             <div class="invalid-feedback">
                 Type at least 3 characters
