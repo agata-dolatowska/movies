@@ -1,17 +1,29 @@
 <template>
   <div>
-    <b-pagination v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
-    <b-form-select v-model="selected" :options="options"></b-form-select>
-      <ul class="movie-list">
-        <li v-for="movie in currentItems" :currentItems="currentItems" :key="movie.id" class="movie-list-item">
-          <img :src='movie.posterPath' class="movie-list-item-img"/>
-          <div>
-            <h1>{{movie.title}}</h1>
-            <p v-if="movie.title !== movie.originalTitle">{{movie.originalTitle}}</p>
-            <p>{{movie.popularity}}</p>
-            <p>{{movie.voteCount}} votes</p>
-          </div>
-          </li>
+    <b-row>
+      <b-col>
+        <b-pagination v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col lg="3">
+        <b-form-select v-model="selected" :options="options"></b-form-select>
+      </b-col>
+    </b-row>
+      <ul class="row movie-list">
+        <li v-for="movie in currentItems" :currentItems="currentItems" :key="movie.id" class="movie-list-item col-lg-6 mt-3">
+          <b-card>
+              <b-card-img img-top :src='movie.posterPath' class="movie-list-item-img mb-3"/>
+              <b-card-title>
+                <router-link :to="{name: 'MovieDetails', params: {id: movie.id}}" :id="movie.id">{{movie.title}}</router-link>
+              </b-card-title>
+              <b-card-text>
+                <p v-if="movie.title !== movie.originalTitle">{{movie.originalTitle}}</p>
+                <p>{{movie.popularity}}</p>
+                <p>{{movie.voteCount}} votes</p>
+              </b-card-text>
+          </b-card>
+        </li>
       </ul>
   </div>
 </template>
@@ -23,12 +35,6 @@ import MovieListItem from '@/models/movieListItem';
 
 @Component
 export default class SearchList extends Vue {
-    private api = 'https://api.themoviedb.org/3/';
-
-    private key = '?api_key=fd1fd143d38191829dba155225a2c1f1';
-
-    private language = '&language=en-US';
-
     private page = 1;
 
     private allPages = 1;
@@ -37,14 +43,14 @@ export default class SearchList extends Vue {
 
     private currentItems: MovieListItem[] = [];
 
-    private perPage = 3;
+    private perPage = 10;
 
     private currentPage = 1;
 
     private selected = null;
 
     options = [
-      { value: null, text: 'Sort' },
+      { value: null, text: 'Sort', disabled: true },
       { value: 'az', text: 'A-Z' },
       { value: 'za', text: 'Z-A' },
       { value: 'mostPopular', text: 'most popular' },
@@ -57,6 +63,10 @@ export default class SearchList extends Vue {
 
     get searchValue(): string {
       return this.$store.state.searchValue;
+    }
+
+    get apiData(): {api: string; key: string; language: string} {
+      return this.$store.state.apiData;
     }
 
     @Watch('selected')
@@ -97,12 +107,12 @@ export default class SearchList extends Vue {
     }
 
     private async getMovies() {
-      const moviesFetch = await fetch(`${this.api}search/movie${this.key + this.language}&page=${this.page}&query=${this.searchValue}`);
+      const moviesFetch = await fetch(`${this.apiData.api}search/movie${this.apiData.key + this.apiData.language}&page=${this.page}&query=${this.searchValue}`);
 
       const movies = await moviesFetch.json();
       this.allPages = await movies.total_pages;
 
-      await movies.results.forEach((movie: {poster_path: string; title: string; original_title: string; popularity: number; vote_count: number}) => {
+      await movies.results.forEach((movie: {id: number; poster_path: string; title: string; original_title: string; popularity: number; vote_count: number}) => {
         this.items.push(new MovieListItem(movie));
       });
     }
@@ -115,12 +125,8 @@ export default class SearchList extends Vue {
   padding: 0;
 }
 
-.movie-list-item {
-  text-align: left;
-  display: flex;
-}
-
 .movie-list-item-img {
   height: 200px;
+  width: auto;
 }
 </style>
