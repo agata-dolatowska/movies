@@ -1,30 +1,39 @@
 <template>
   <div>
-    <b-row>
-      <b-col>
-        <b-pagination v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col lg="3">
-        <b-form-select v-model="selected" :options="options"></b-form-select>
-      </b-col>
-    </b-row>
-      <ul class="row movie-list">
-        <li v-for="movie in currentItems" :currentItems="currentItems" :key="movie.id" class="movie-list-item col-lg-6 mt-3">
-          <b-card>
-              <b-card-img img-top :src='movie.posterPath' class="movie-list-item-img mb-3"/>
-              <b-card-title>
-                <router-link :to="{name: 'MovieDetails', params: {id: movie.id}}" :id="movie.id">{{movie.title}}</router-link>
-              </b-card-title>
-              <b-card-text>
-                <p v-if="movie.title !== movie.originalTitle">{{movie.originalTitle}}</p>
-                <p>{{movie.popularity}}</p>
-                <p>{{movie.voteCount}} votes</p>
-              </b-card-text>
-          </b-card>
-        </li>
-      </ul>
+    <div v-if="movieExists==false">
+      <b-row>
+        <b-col>
+          <p>{{ resultsInfo }}</p>
+        </b-col>
+      </b-row>
+    </div>
+    <div v-else>
+      <b-row>
+        <b-col>
+          <b-pagination v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col lg="3">
+          <b-form-select v-model="selected" :options="options"></b-form-select>
+        </b-col>
+      </b-row>
+        <ul class="row movie-list">
+          <li v-for="movie in currentItems" :currentItems="currentItems" :key="movie.id" class="movie-list-item col-lg-6 mt-3">
+            <b-card>
+                <b-card-img img-top :src='movie.posterPath' class="movie-list-item-img mb-3"/>
+                <b-card-title>
+                  <router-link :to="{name: 'MovieDetails', params: {id: movie.id}}" :id="movie.id">{{movie.title}}</router-link>
+                </b-card-title>
+                <b-card-text>
+                  <p v-if="movie.title !== movie.originalTitle">{{movie.originalTitle}}</p>
+                  <p><b-icon-star></b-icon-star> {{movie.popularity}}</p>
+                  <p>{{movie.voteCount}} votes</p>
+                </b-card-text>
+            </b-card>
+          </li>
+        </ul>
+      </div>
   </div>
 </template>
 
@@ -35,6 +44,8 @@ import MovieListItem from '@/models/movieListItem';
 
 @Component
 export default class SearchList extends Vue {
+    private movieExists = false;
+
     private page = 1;
 
     private allPages = 1;
@@ -48,6 +59,8 @@ export default class SearchList extends Vue {
     private currentPage = 1;
 
     private selected = null;
+
+    private resultsInfo = '';
 
     options = [
       { value: null, text: 'Sort', disabled: true },
@@ -67,6 +80,12 @@ export default class SearchList extends Vue {
 
     get apiData(): {api: string; key: string; language: string} {
       return this.$store.state.apiData;
+    }
+
+    mounted() {
+      if (this.$store.state.searchValue !== '') {
+        this.getList();
+      }
     }
 
     @Watch('selected')
@@ -91,7 +110,7 @@ export default class SearchList extends Vue {
     @Watch('currentPage')
     private updateCurrentList() {
       this.currentItems = [];
-      for (let i = (this.currentPage * this.perPage) - this.perPage; i < (this.currentPage * this.perPage); i += 1) {
+      for (let i = (this.currentPage * this.perPage) - this.perPage; i < (this.currentPage * this.perPage) && i < this.items.length; i += 1) {
         this.currentItems.push(this.items[i]);
       }
     }
@@ -100,10 +119,17 @@ export default class SearchList extends Vue {
     private async getList() {
       this.items = [];
       await this.getMovies();
-      for (this.page = 2; this.page <= this.allPages; this.page += 1) {
-        this.getMovies();
+      if (this.items.length > 0) {
+        for (this.page = 2; this.page <= this.allPages; this.page += 1) {
+          this.getMovies();
+        }
+        await this.updateCurrentList();
+        this.movieExists = true;
+        this.resultsInfo = '';
+      } else {
+        this.movieExists = false;
+        this.resultsInfo = `No results for ${this.$store.state.searchValue}`;
       }
-      await this.updateCurrentList();
     }
 
     private async getMovies() {
@@ -123,6 +149,7 @@ export default class SearchList extends Vue {
 .movie-list {
   list-style-type: none;
   padding: 0;
+  text-align: center;
 }
 
 .movie-list-item-img {
