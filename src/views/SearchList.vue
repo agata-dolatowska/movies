@@ -118,6 +118,7 @@ export default class SearchList extends Vue {
     @Watch('searchValue')
     private async getList() {
       this.items = [];
+      this.page = 1;
       await this.getMovies();
       if (this.items.length > 0) {
         for (this.page = 2; this.page <= this.allPages; this.page += 1) {
